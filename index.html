@@ -138,7 +138,7 @@
         // --- DATA CONFIGURATION ---
         // Day 1 is now permanently "tofu" type.
         const gachaData = [
-            { day: 1, flower: "tofu", theme: "Cozy", icon: "🧣", image: "assets/tofu-cozy.png", title: "Cozy Tofu", message: "Let's start this month cozy. Is it chilly? Better snuggle up! ☁️" },
+            { day: 1, flower: "tofu", theme: "Cozy", icon: "🧣", image: "assets/tofu-cozy.png", locked: true, title: "Cozy Tofu", message: "Let's start this month cozy. Is it chilly? Better snuggle up! ☁️" },
             { day: 2, flower: "peony", theme: "Sushi", icon: "🍣", image: "assets/tofus-tomago.png", title: "Tamago Tofu", message: "You're soy amazing. The sweetest roll in the menu! 🥚" },
             { day: 3, flower: "sunflower", theme: "Sunflower", icon: "🌻", image: "assets/tofus-sunflower.png", title: "Sunny Tofu", message: "You are a bouncing ray of sunshine in life! 🌻" },
             { day: 4, flower: "gardenia", theme: "Work", icon: "📋", image: "assets/tofus-event-planner.png", title: "Event Planner Tofu", message: "My favorite event on the calendar is you. 📅" },
@@ -151,7 +151,7 @@
             { day: 11, flower: "gardenia", theme: "Tech", icon: "💻", image: "assets/tofus-tech.png", title: "Tech Bro Tofu", message: "We are tech-nically paired by Tofu's not-Blue (snaggle) tooth! 🦷" },
             { day: 12, flower: "gardenia", theme: "Gardenia", icon: "🌿", image: "assets/tofus-gardenia.png", title: "Gardenia Tofu", message: "You make me lower my gard[enia]... HARRIZZMENT!! 🥹" },
             { day: 13, flower: "sunflower", theme: "Sleep", icon: "💤", image: "assets/tofus-sleep.png", title: "Sleepy Tofu", message: "Dreaming of you while you're drooling on me. 🤤" },
-            { day: 14, flower: "peony", theme: "Valentine", icon: "💘", image: "assets/tofus-valentine.png", title: "Cupid Tofu", message: "Happy Valentine's Day, Emily! Tofu and I love you lots! 🥰" }
+            { day: 14, flower: "peony", theme: "Valentine", icon: "💘", image: "assets/tofus-valentine.png", locked: true, title: "Cupid Tofu", message: "Happy Valentine's Day, Emily! Tofu and I love you lots! 🥰" }
         ];
 
         // --- STATE MANAGEMENT ---
@@ -323,10 +323,13 @@
 
         // --- RANDOMIZATION LOGIC ---
         function randomizeFlowers() {
+            // Build a list of flowers from days that are NOT locked. Locked days (e.g. day 1 and day 14)
+            // will be preserved and excluded from the shuffle.
             const availableFlowers = gachaData
-                .filter(item => item.day !== 1)
+                .filter(item => !item.locked)
                 .map(item => item.flower);
 
+            // Fisher-Yates shuffle
             for (let i = availableFlowers.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [availableFlowers[i], availableFlowers[j]] = [availableFlowers[j], availableFlowers[i]];
@@ -334,8 +337,9 @@
 
             let flowerIndex = 0;
             gachaData.forEach(item => {
-                if (item.day === 1) {
-                    flowerAssignments[item.day] = 'tofu'; 
+                if (item.locked) {
+                    // preserve locked day's original flower
+                    flowerAssignments[item.day] = item.flower;
                 } else {
                     flowerAssignments[item.day] = availableFlowers[flowerIndex];
                     flowerIndex++;
