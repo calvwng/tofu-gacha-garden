@@ -127,7 +127,7 @@
     <!-- Debug/Reset Footer -->
     <footer class="fixed bottom-2 right-2 flex gap-2 opacity-50 hover:opacity-100 transition">
         <button onclick="randomizeFlowers()" class="text-xs text-gray-400 bg-white px-2 py-1 rounded border hover:bg-gray-100">
-            Shuffle Flowers 🔀
+            Shuffle Days 2-13 🔀
         </button>
         <button id="reset-btn" onclick="resetProgress()" class="text-xs text-gray-400 bg-white px-2 py-1 rounded border hover:bg-gray-100">
             Reset Progress ↻
@@ -331,32 +331,58 @@
 
         // --- RANDOMIZATION LOGIC ---
         function randomizeFlowers() {
-            // Build a list of flowers from days that are NOT locked. Locked days (e.g. day 1 and day 14)
-            // will be preserved and excluded from the shuffle.
-            const availableFlowers = gachaData
-                .filter(item => !item.locked)
-                .map(item => item.flower);
+            // This shuffle moves whole "cards" (flower, theme, icon, image, title, message)
+            // between unlocked days while preserving each item's `day` and `locked` state.
 
-            // Fisher-Yates shuffle
-            for (let i = availableFlowers.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [availableFlowers[i], availableFlowers[j]] = [availableFlowers[j], availableFlowers[i]];
+            // Helper: Fisher-Yates shuffle
+            function shuffleArray(arr) {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
             }
 
-            let flowerIndex = 0;
+            // Collect indices for unlocked days
+            const unlockedIndices = [];
+            gachaData.forEach((item, idx) => {
+                if (!item.locked) unlockedIndices.push(idx);
+            });
+
+            // Build a pool of card objects to shuffle (only the grouped content)
+            const pool = unlockedIndices.map(i => {
+                const it = gachaData[i];
+                return {
+                    flower: it.flower,
+                    theme: it.theme,
+                    icon: it.icon,
+                    image: it.image,
+                    title: it.title,
+                    message: it.message
+                };
+            });
+
+            // Shuffle the pool and reassign to unlocked days
+            shuffleArray(pool);
+            unlockedIndices.forEach((idx, k) => {
+                const src = pool[k];
+                // Overwrite only the grouped content — keep `day` and `locked` as-is
+                gachaData[idx].flower = src.flower;
+                gachaData[idx].theme = src.theme;
+                gachaData[idx].icon = src.icon;
+                gachaData[idx].image = src.image;
+                gachaData[idx].title = src.title;
+                gachaData[idx].message = src.message;
+            });
+
+            // Rebuild flowerAssignments mapping so renderCalendar uses the new assignments
+            flowerAssignments = {};
             gachaData.forEach(item => {
-                if (item.locked) {
-                    // preserve locked day's original flower
-                    flowerAssignments[item.day] = item.flower;
-                } else {
-                    flowerAssignments[item.day] = availableFlowers[flowerIndex];
-                    flowerIndex++;
-                }
+                flowerAssignments[item.day] = item.flower;
             });
 
             localStorage.setItem(flowerKey, JSON.stringify(flowerAssignments));
             renderCalendar();
-            
+
             const btn = document.querySelector('button[onclick="randomizeFlowers()"]');
             const originalText = btn.innerText;
             btn.innerText = 'Shuffled! ✨';
