@@ -317,6 +317,14 @@
 
                 inner.innerHTML = content;
                 container.appendChild(inner);
+                // If this day is locked, show a small badge on the tile so users know it won't be shuffled
+                if (item.locked) {
+                    const lockBadge = document.createElement('div');
+                    lockBadge.className = 'absolute top-2 right-2 bg-white/90 text-pink-600 text-xs font-semibold px-2 py-1 rounded-full shadow-sm border border-pink-200 pointer-events-none';
+                    lockBadge.title = 'Locked — excluded from Shuffle';
+                    lockBadge.innerText = '📌';
+                    container.appendChild(lockBadge);
+                }
                 grid.appendChild(container);
             });
         }
