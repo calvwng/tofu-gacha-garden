@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tofu's Garden Gacha</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts: Fredoka for a rounded, cute look -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #FFF0F5; /* Lavender Blush */
+            background-image: radial-gradient(#FFB7B2 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Flower/Button Styling */
+        .flower-btn {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            /* Performance optimization to prevent glitching during animation */
+            will-change: transform; 
+        }
+        
+        .flower-btn:hover {
+            transform: scale(1.1) rotate(5deg);
+            z-index: 10;
+        }
+
+        .flower-btn.opened {
+            opacity: 0.6;
+            filter: grayscale(0.8);
+            transform: scale(0.9);
+        }
+
+        /* Shake Animation */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .shaking {
+            animation: shake 0.5s;
+            animation-iteration-count: 1;
+        }
+
+        /* Modal Pop Animation */
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .modal-content {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .no-scroll {
+            overflow: hidden;
+        }
+        
+        /* Text shadow for numbers on flowers to ensure readability */
+        .flower-num {
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8 px-4 text-gray-800">
+
+    <!-- Header -->
+    <header class="text-center mb-8 flex flex-col items-center">
+        <div class="flex items-center justify-center gap-4 mb-2">
+            <h1 class="text-4xl md:text-5xl font-bold text-pink-500 drop-shadow-sm">Emily's Tofu Gacha Garden</h1>
+        </div>
+        <p class="text-lg text-gray-600 bg-white/80 inline-block px-4 py-1 rounded-full shadow-sm">
+            Happy Valentine's, Emily! Pick a flower to reveal your daily surprise! 🌸 Love, Calvin
+        </p>
+    </header>
+
+    <!-- Grid Container -->
+    <div id="gacha-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-4xl pb-12">
+        <!-- Flowers injected here -->
+    </div>
+
+    <!-- Modal Overlay -->
+    <div id="modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm" onclick="closeModal(event)">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 relative modal-content text-center border-4 border-pink-200" onclick="event.stopPropagation()">
+            
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition">
+                ✕
+            </button>
+
+            <div class="mt-4">
+                <div class="text-sm font-bold text-pink-400 tracking-widest uppercase mb-2" id="modal-day">DAY 1</div>
+                
+                <div class="bg-gradient-to-br from-pink-50 to-blue-50 rounded-2xl p-8 mb-6 border-2 border-dashed border-pink-200 relative overflow-hidden group">
+                    <div id="modal-icon" class="text-8xl transform transition group-hover:scale-110 duration-500">
+                        🎁
+                    </div>
+                </div>
+
+                <h2 id="modal-title" class="text-2xl font-bold text-gray-800 mb-2">Title Here</h2>
+                <p id="modal-message" class="text-gray-600 text-lg leading-relaxed">Message goes here...</p>
+            </div>
+
+            <button onclick="closeModal()" class="mt-8 bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:-translate-y-1 active:scale-95 w-full">
+                Keep it! ❤️
+            </button>
+        </div>
+    </div>
+
+    <!-- Debug/Reset Footer -->
+    <footer class="fixed bottom-2 right-2 flex gap-2 opacity-50 hover:opacity-100 transition">
+        <button onclick="randomizeFlowers()" class="text-xs text-gray-400 bg-white px-2 py-1 rounded border hover:bg-gray-100">
+            Shuffle Flowers 🔀
+        </button>
+        <button id="reset-btn" onclick="resetProgress()" class="text-xs text-gray-400 bg-white px-2 py-1 rounded border hover:bg-gray-100">
+            Reset Progress ↻
+        </button>
+    </footer>
+
+    <script>
+        // --- DATA CONFIGURATION ---
+        // Day 1 is now permanently "tofu" type.
+        const gachaData = [
+            { day: 1, flower: "tofu", theme: "Cozy", icon: "🧣", image: "assets/tofu-cozy.png", title: "Cozy Tofu", message: "Let's start this month cozy. Is it chilly? Better snuggle up! ☁️" },
+            { day: 2, flower: "peony", theme: "Sushi", icon: "🍣", image: "assets/tofus-tomago.png", title: "Tamago Tofu", message: "You're soy amazing. The sweetest roll in the menu! 🥚" },
+            { day: 3, flower: "sunflower", theme: "Sunflower", icon: "🌻", image: "assets/tofus-sunflower.png", title: "Sunny Tofu", message: "You are a bouncing ray of sunshine in life! 🌻" },
+            { day: 4, flower: "gardenia", theme: "Work", icon: "📋", image: "assets/tofus-event-planner.png", title: "Event Planner Tofu", message: "My favorite event on the calendar is you. 📅" },
+            { day: 5, flower: "peony", theme: "Cantonese", icon: "🥟", image: "assets/tofus-har-gow.png", title: "Har Gow Tofu", message: "Don't dim sum lights because lei hou leng! (You are pretty!)" },
+            { day: 6, flower: "sunflower", theme: "Japan", icon: "👘", image: "assets/tofus-kyoto.png", title: "Kyoto Tofu", message: "You're kawaii, online and in life~ ✨" },
+            { day: 7, flower: "gardenia", theme: "Goofy", icon: "🤪", image: "assets/tofus-derp.png", title: "Derp Tofu", message: "You're definitely goof-E. I'm more goof-C." },
+            { day: 8, flower: "peony", theme: "Noodles", icon: "🍜", image: "assets/tofus-ramen.png", title: "Ramen Tofu", message: "Send noods? Nah, let's share noods (as always)! 🍜" },
+            { day: 9, flower: "peony", theme: "Peony", icon: "🌸", image: "assets/tofus-peony.png", title: "Peony Prince", message: "You are my peony princess in bloom!" },
+            { day: 10, flower: "sunflower", theme: "Korea", icon: "🇰🇷", image: "assets/tofus-korea.png", title: "Hanbok Tofu", message: "Saranghae! You are my favorite travel buddy. Thanks for putting me on grilled eel! 🍴😋" },
+            { day: 11, flower: "gardenia", theme: "Tech", icon: "💻", image: "assets/tofus-tech.png", title: "Tech Bro Tofu", message: "We are tech-nically paired by Tofu's not-Blue (snaggle) tooth! 🦷" },
+            { day: 12, flower: "gardenia", theme: "Gardenia", icon: "🌿", image: "assets/tofus-gardenia.png", title: "Gardenia Tofu", message: "You make me lower my gard[enia]... HARRIZZMENT!! 🥹" },
+            { day: 13, flower: "sunflower", theme: "Sleep", icon: "💤", image: "assets/tofus-sleep.png", title: "Sleepy Tofu", message: "Dreaming of you while you're drooling on me. 🤤" },
+            { day: 14, flower: "peony", theme: "Valentine", icon: "💘", image: "assets/tofus-valentine.png", title: "Cupid Tofu", message: "Happy Valentine's Day, Emily! Tofu and I love you lots! 🥰" }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        const progressKey = 'tofu_gacha_progress_v2'; 
+        const flowerKey = 'tofu_gacha_flowers_v3'; 
+
+        let openedDays = JSON.parse(localStorage.getItem(progressKey)) || [];
+        let flowerAssignments = JSON.parse(localStorage.getItem(flowerKey));
+
+        if (!flowerAssignments) {
+            flowerAssignments = {};
+            gachaData.forEach(item => {
+                flowerAssignments[item.day] = item.flower;
+            });
+            localStorage.setItem(flowerKey, JSON.stringify(flowerAssignments));
+        }
+
+        // --- DOM ELEMENTS ---
+        const grid = document.getElementById('gacha-grid');
+        const modal = document.getElementById('modal');
+        const body = document.body;
+
+        // --- VISUAL GENERATORS ---
+        
+        function getTofuImage(day) {
+            // Reverted to Image for full detail (SVG was missing colors)
+            // Added rounded-full and overflow-hidden to clip corners into an oval/circle
+            // UPDATED FALLBACK: Lifted ears on the Maltese SVG
+            const malteseFallback = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3C!-- Fluffy Base --%3E%3Cpath d=%27M20 50 Q10 30 30 20 Q50 10 70 20 Q90 30 80 50 Q90 70 70 85 Q50 90 30 85 Q10 70 20 50%27 fill=%27white%27 stroke=%27%23e5e7eb%27 stroke-width=%272%27/%3E%3C!-- Ears (Lifted) --%3E%3Cpath d=%27M25 25 Q10 45 15 65%27 fill=%27white%27 stroke=%27%23e5e7eb%27 stroke-width=%272%27/%3E%3Cpath d=%27M75 25 Q90 45 85 65%27 fill=%27white%27 stroke=%27%23e5e7eb%27 stroke-width=%272%27/%3E%3C!-- Face Overlay --%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2728%27 fill=%27white%27/%3E%3C!-- Eyes --%3E%3Ccircle cx=%2738%27 cy=%2748%27 r=%274.5%27 fill=%27%23111827%27/%3E%3Ccircle cx=%2739.5%27 cy=%2746.5%27 r=%271.5%27 fill=%27white%27 opacity=%270.9%27/%3E%3Ccircle cx=%2762%27 cy=%2748%27 r=%274.5%27 fill=%27%23111827%27/%3E%3Ccircle cx=%2763.5%27 cy=%2746.5%27 r=%271.5%27 fill=%27white%27 opacity=%270.9%27/%3E%3C!-- Nose --%3E%3Cellipse cx=%2750%27 cy=%2756%27 rx=%275%27 ry=%273.5%27 fill=%27%23111827%27/%3E%3C!-- Mouth --%3E%3Cpath d=%27M46 63 Q50 66 54 63%27 fill=%27none%27 stroke=%27%23111827%27 stroke-width=%271.5%27 stroke-linecap=%27round%27/%3E%3C!-- Blush --%3E%3Ccircle cx=%2732%27 cy=%2758%27 r=%274%27 fill=%27%23fbcfe8%27 opacity=%270.5%27/%3E%3Ccircle cx=%2768%27 cy=%2758%27 r=%274%27 fill=%27%23fbcfe8%27 opacity=%270.5%27/%3E%3C/svg%3E";
+
+            return `
+            <!-- Day 1 image: put the capsule PNG into assets/tofu-capsule.png next to this HTML file -->
+            <div class="w-full h-full relative flex items-center justify-center">
+                <div class="w-full h-full relative transition-transform hover:scale-105 rounded-full overflow-hidden shadow-lg border-4 border-pink-200 bg-white">
+                    <img src="assets/tofu-capsule.png"
+                         onerror="this.onerror=null; this.src='${malteseFallback}'"
+                         alt="Tofu capsule"
+                         class="w-full h-full object-cover"
+                         style="object-position: 50% -12%; transform: scale(1.1);">
+                </div>
+                <div class="absolute bottom-2 right-2 bg-white/90 rounded-full w-8 h-8 flex items-center justify-center shadow-sm z-10">
+                    <span class="text-pink-600 font-bold font-Fredoka text-lg">${day}</span>
+                </div>
+            </div>`;
+        }
+
+        function getSunflowerSVG(day) {
+            return `
+            <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+                <defs>
+                    <radialGradient id="centerGrad${day}" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#78350F" />
+                        <stop offset="100%" stop-color="#451a03" />
+                    </radialGradient>
+                </defs>
+                <g fill="#FFD700" stroke="#F59E0B" stroke-width="0.5">
+                    ${[0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345].map((deg, i) => 
+                        `<ellipse cx="50" cy="50" rx="${i % 2 === 0 ? 7.5 : 6}" ry="${i % 2 === 0 ? 48 : 42}" transform="rotate(${deg} 50 50)" />`
+                    ).join('')}
+                </g>
+                <circle cx="50" cy="50" r="28" fill="url(#centerGrad${day})" />
+                <circle cx="50" cy="50" r="28" fill="none" stroke="#451a03" stroke-width="1" stroke-dasharray="2 3" opacity="0.5"/>
+                <text x="50" y="60" font-family="Fredoka, sans-serif" font-size="28" text-anchor="middle" fill="white" font-weight="bold" class="flower-num">${day}</text>
+            </svg>`;
+        }
+
+        function getPeonySVG(day) {
+            const createPetalRing = (count, radius, width, height, color, rotationOffset = 0) => {
+                let paths = '';
+                for(let i=0; i<count; i++) {
+                    const deg = (360 / count) * i + rotationOffset;
+                    paths += `<path d="M50 50 Q${50-width} ${50-radius} 50 ${50-(radius+5)} Q${50+width} ${50-radius} 50 50" 
+                             fill="${color}" stroke="rgba(0,0,0,0.1)" stroke-width="0.5"
+                             transform="rotate(${deg} 50 50)" />`;
+                }
+                return paths;
+            };
+
+            return `
+            <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+                <g transform="translate(50 50) scale(1.1)">
+                    <g fill="#166534" stroke="#052e16" stroke-width="0.5">
+                        <path d="M0 0 Q-20 20 -35 15 Q-45 5 -25 -15 Z" />
+                        <path d="M0 0 Q20 20 35 15 Q45 5 25 -15 Z" />
+                        <path d="M0 0 Q-10 30 0 45 Q10 30 0 0 Z" />
+                    </g>
+                </g>
+                ${createPetalRing(7, 42, 25, 45, '#BE185D')}
+                ${createPetalRing(7, 38, 22, 40, '#DB2777', 25)}
+                ${createPetalRing(6, 30, 18, 30, '#E11D48', 10)}
+                ${createPetalRing(6, 22, 15, 20, '#F472B6', 40)}
+                ${createPetalRing(5, 14, 10, 15, '#FBCFE8', 0)}
+                <g fill="#FCD34D">
+                    <circle cx="48" cy="48" r="2" />
+                    <circle cx="52" cy="52" r="2" />
+                    <circle cx="52" cy="48" r="2" />
+                    <circle cx="48" cy="52" r="2" />
+                    <circle cx="50" cy="50" r="2.5" />
+                </g>
+                <text x="50" y="58" font-family="Fredoka, sans-serif" font-size="22" text-anchor="middle" fill="white" font-weight="bold" class="flower-num" style="text-shadow: 0px 1px 3px rgba(0,0,0,0.6);">${day}</text>
+            </svg>`;
+        }
+
+        function getGardeniaSVG(day) {
+            return `
+            <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+                <g>
+                    <path d="M50 50 Q20 20 10 50 Q20 80 50 50" fill="#064E3B" />
+                    <path d="M25 35 Q18 50 25 65" fill="none" stroke="#22C55E" stroke-width="2" opacity="0.4" />
+                    <path d="M50 50 Q80 20 90 50 Q80 80 50 50" fill="#064E3B" />
+                    <path d="M75 35 Q82 50 75 65" fill="none" stroke="#22C55E" stroke-width="2" opacity="0.4" />
+                    <path d="M50 50 Q25 25 25 10 Q60 25 50 50" fill="#065F46" />
+                    <path d="M50 50 Q75 25 75 10 Q40 25 50 50" fill="#065F46" />
+                    <path d="M50 50 Q50 90 50 95" stroke="#064E3B" stroke-width="3" />
+                </g>
+                <g stroke="#E5E7EB" stroke-width="1">
+                    <path d="M50 50 Q30 20 50 5 Q70 20 50 50" fill="#FFFFFF" />
+                    <path d="M50 50 Q80 30 95 50 Q80 70 50 50" fill="#FFFFFF" />
+                    <path d="M50 50 Q70 80 50 95 Q30 80 50 50" fill="#FFFFFF" />
+                    <path d="M50 50 Q20 70 5 50 Q20 30 50 50" fill="#FFFFFF" />
+                    <g transform="rotate(45 50 50)">
+                        <path d="M50 50 Q30 25 50 10 Q70 25 50 50" fill="#F9FAFB" />
+                        <path d="M50 50 Q80 30 90 50 Q80 70 50 50" fill="#F9FAFB" />
+                        <path d="M50 50 Q70 75 50 90 Q30 75 50 50" fill="#F9FAFB" />
+                        <path d="M50 50 Q20 70 10 50 Q20 30 50 50" fill="#F9FAFB" />
+                    </g>
+                </g>
+                <g>
+                    <circle cx="50" cy="50" r="14" fill="#FEFCE8" stroke="#FEF08A" stroke-width="1"/>
+                    <path d="M50 50 Q40 40 50 38 Q60 40 50 50" fill="#FEF3C7" />
+                    <path d="M50 50 Q40 60 38 50 Q40 40 50 50" fill="#FEF3C7" />
+                    <path d="M50 50 Q60 60 50 62 Q40 60 50 50" fill="#FEF3C7" />
+                    <path d="M50 50 Q60 40 62 50 Q60 60 50 50" fill="#FEF3C7" />
+                </g>
+                <text x="50" y="62" font-family="Fredoka, sans-serif" font-size="22" text-anchor="middle" fill="#78350F" font-weight="bold" class="flower-num" style="text-shadow: 0px 1px 2px rgba(255,255,255,0.8);">${day}</text>
+            </svg>`;
+        }
+
+        // --- INITIALIZATION ---
+        function renderCalendar() {
+            grid.innerHTML = '';
+            
+            gachaData.forEach((item, index) => {
+                const isOpened = openedDays.includes(item.day);
+                const assignedFlower = flowerAssignments[item.day] || item.flower;
+                const container = document.createElement('div');
+                container.className = `flower-btn w-full pt-[100%] relative ${isOpened ? 'opened' : ''}`;
+                container.onclick = () => openCapsule(index, container);
+
+                const inner = document.createElement('div');
+                inner.className = 'absolute inset-0 flex items-center justify-center p-2';
+                
+                let content = '';
+                if (item.day === 1 || assignedFlower === 'tofu') {
+                    content = getTofuImage(item.day);
+                } else if (assignedFlower === 'sunflower') {
+                    content = getSunflowerSVG(item.day);
+                } else if (assignedFlower === 'peony') {
+                    content = getPeonySVG(item.day);
+                } else {
+                    content = getGardeniaSVG(item.day);
+                }
+
+                inner.innerHTML = content;
+                container.appendChild(inner);
+                grid.appendChild(container);
+            });
+        }
+
+        // --- RANDOMIZATION LOGIC ---
+        function randomizeFlowers() {
+            const availableFlowers = gachaData
+                .filter(item => item.day !== 1)
+                .map(item => item.flower);
+
+            for (let i = availableFlowers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [availableFlowers[i], availableFlowers[j]] = [availableFlowers[j], availableFlowers[i]];
+            }
+
+            let flowerIndex = 0;
+            gachaData.forEach(item => {
+                if (item.day === 1) {
+                    flowerAssignments[item.day] = 'tofu'; 
+                } else {
+                    flowerAssignments[item.day] = availableFlowers[flowerIndex];
+                    flowerIndex++;
+                }
+            });
+
+            localStorage.setItem(flowerKey, JSON.stringify(flowerAssignments));
+            renderCalendar();
+            
+            const btn = document.querySelector('button[onclick="randomizeFlowers()"]');
+            const originalText = btn.innerText;
+            btn.innerText = 'Shuffled! ✨';
+            setTimeout(() => btn.innerText = originalText, 1000);
+        }
+
+        // --- INTERACTION LOGIC ---
+        function openCapsule(index, element) {
+            const dayData = gachaData[index];
+            if (openedDays.includes(dayData.day)) {
+                showModal(dayData);
+                return;
+            }
+            element.classList.add('shaking');
+            setTimeout(() => {
+                element.classList.remove('shaking');
+                openedDays.push(dayData.day);
+                localStorage.setItem(progressKey, JSON.stringify(openedDays));
+                renderCalendar();
+                fireConfetti();
+                showModal(dayData);
+            }, 500);
+        }
+
+        function showModal(data) {
+            document.getElementById('modal-day').innerText = `DAY ${data.day}`;
+            document.getElementById('modal-title').innerText = data.title;
+            document.getElementById('modal-message').innerText = data.message;
+
+            const modalIconEl = document.getElementById('modal-icon');
+            // Clear any previous content
+            modalIconEl.innerHTML = '';
+
+            // If an image is provided for this day, try to load it and fall back to the emoji icon on error
+            if (data.image) {
+                const img = document.createElement('img');
+                img.src = data.image;
+                img.alt = data.title || '';
+                // Increased size with responsive steps so it looks good on small and larger screens
+                img.className = 'mx-auto w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-contain';
+                img.onload = () => {
+                    // image loaded successfully, keep it
+                };
+                img.onerror = () => {
+                    // fallback to emoji icon if image fails to load — render inside a sized element so it matches image sizing
+                    modalIconEl.innerHTML = '';
+                    const span = document.createElement('div');
+                    span.className = 'mx-auto text-3xl sm:text-4xl md:text-6xl';
+                    span.innerText = data.icon || '';
+                    modalIconEl.appendChild(span);
+                };
+                modalIconEl.appendChild(img);
+            } else {
+                // No image: show the emoji in a sized element so layout stays consistent
+                modalIconEl.innerHTML = '';
+                const span = document.createElement('div');
+                span.className = 'mx-auto text-3xl sm:text-4xl md:text-6xl';
+                span.innerText = data.icon || '';
+                modalIconEl.appendChild(span);
+            }
+
+            modal.classList.remove('hidden');
+            body.classList.add('no-scroll');
+        }
+
+        function closeModal(event) {
+            modal.classList.add('hidden');
+            body.classList.remove('no-scroll');
+        }
+
+        let resetTimeout;
+        function resetProgress() {
+            const btn = document.getElementById('reset-btn');
+            if (btn.innerText === 'Confirm Reset?') {
+                localStorage.removeItem(progressKey);
+                openedDays = [];
+                renderCalendar();
+                btn.innerText = 'Done!';
+                btn.classList.remove('text-red-500', 'font-bold');
+                setTimeout(() => { btn.innerText = 'Reset Progress ↻'; }, 1000);
+                clearTimeout(resetTimeout);
+            } else {
+                btn.innerText = 'Confirm Reset?';
+                btn.classList.add('text-red-500', 'font-bold');
+                resetTimeout = setTimeout(() => {
+                    btn.innerText = 'Reset Progress ↻';
+                    btn.classList.remove('text-red-500', 'font-bold');
+                }, 3000);
+            }
+        }
+
+        function fireConfetti() {
+            var count = 200;
+            var defaults = { origin: { y: 0.7 } };
+            function fire(particleRatio, opts) {
+                confetti(Object.assign({}, defaults, opts, {
+                    particleCount: Math.floor(count * particleRatio)
+                }));
+            }
+            fire(0.25, { spread: 26, startVelocity: 55, colors: ['#F472B6', '#FBCFE8'] });
+            fire(0.2, { spread: 60, colors: ['#60A5FA', '#93C5FD'] });
+            fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8, colors: ['#FACC15'] });
+            fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+            fire(0.1, { spread: 120, startVelocity: 45 });
+        }
+
+        renderCalendar();
+    </script>
+</body>
+</html>
