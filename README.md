@@ -1,31 +1,68 @@
-# Emily's Tofu Gacha Garden
+# Tofu Gacha Garden
 
-This is a digital Valentine's gift to combine learning with love, because how else do we have time for both?! 🥹😂
+This is a digital Valentine's gift to combine learning with love, because how else would we humans have time for both?! 🥹😂
 
 https://calvwng.github.io/tofu-gacha-garden/
 
-## Process
+# Visual Process
 
-See https://github.com/calvwng/tofu-gacha-garden/wiki/Visual-Log for visual history.
+See https://github.com/calvwng/tofu-gacha-garden/wiki/Verbose-Written-Log for more written details.
 
-1. I started in Google Gemini using its Canvas tool. I was determined to vibe-code this to figure out viable workflows to build personal projects more casually without work-provided restrictions and tooling. Then I can start bringing more ideas to life!
-1. I got decently far in the Gemini Canvas: I built the responsive layout with gacha capsule placeholders for each day's slot in a few prompt shots.
-1. I now had to figure out how to approach some imagery needs:
-    1. I wanted to include her favorite flowers: peonies, gardenias, and sunflowers.
-		1. Of course I needed to integrate Tofu the lovable dog.
-1. Even if I uploaded source images to Gemini, it just wouldn't properly use/load them and kept deciding to give up and include SVG-based placeholders.
-1. I started to realize that Gemini was going to favor SVGs as far as I knew, so I at least tried to work with that and after many weird-looking attempts, I finally arrived at some decent looking SVG flowers. I needed to upload reference pictures and guided nudges to get the right look.
-1. But then I had to include visuals of Tofu the dog, and building him as a SVG was certainly not working out...
-1. I copied the HTML over to Anthropic Claude to build with its Artifact system, but whenever I tried to upload an image it would fail and tell me there was a network connection issue (despite all my other requests working fine, so that message seems innacurate). But supposedly the Artifact could use my uploaded image if the upload succeeded? I still don't know at the moment, but I had to move on and make progress.
-1. The clearest path for me at this point was finding and using something in which I could directly manage the project directory including assets. So I poked around on GitHub (thinking I may ultimately end up hosting through GH Pages) and explored the Codespaces concept.
-1. Cool, I learned that I could basically build using GitHub Copilot in a cloud-instance of VS Code via Codespaces!
-1. The AI coding models available there were smaller guns than I were used to (GPT-5 mini, GPT 4.1, Claude Haiku 4.5, etc.), but I figured it'd be a good opportunity to test if I could make do with them.
-    1. Spoiler alert: they were just fine for this simple project. If anything, there may have been some bugs with the GitHub Copilot UX there, with things like `@` mentions not allowing me to reference files that were very clearly there. So quirks like that slowed me down a bit during prompting.
-1. I was able to open the Codespace in my actual Desktop VS Code and work from there. Sure enough, I could add my image assets to the repo like any other dev project I'd work on, so development was pretty straightforward at this point.
-1. However, generating 1-14 different variations of Tofu the dog based on different themes ended up being a little trickier than I expected.
-1. Gemini Nano Banana actually did a great job with character style and consistency when I uploaded a real picture of Tofu the dog and asked for a cute chibi version as a base character. Consistency was great when I asked for generation of the themed variations of Tofu in the same style, too.
-1. The tricky part was that I wanted Gemini to generate multiple images for me at once, rather than me having to wait for 14 separate generations. Well, it did 4 at a time, but all as part of one image so I had to split them myself somehow.
-1. Luckily, the contextual Adobe Express integration that appears under generated images saved me a bit of effort here. Through that integration modal, I was able to crop and download the 4 images out of the composite image without having to download the composite image and use Windows's image editing tool (which would've been more mouse movement and clicking than preferred). I do wish the Express modal stayed open to let me repeat the crop action without opening and closing the integration, though.
-1. After sorting out the image assets, I vibe-coded them in and updated the shuffling logic to allow for more variety/surprise.
-1. As I write this, I figure I'll be able to publish my repo from the Codespace to GitHub, where I can host the simple web app via GH Pages.
-1. Once it's up there, another thing I may play with is Google Labs's Jules tool. As I currently understand it, it's a cloud agent that can work on my repos (while I sleep) in a more long-running agentic fashion, raising PRs for my review once it feels it's completed its assigned task? Something like that. We'll see!
+## Started in Gemini > Canvas
+
+- Built most of the prototype with Gemini 3 Pro as a Canvas artifact
+- Couldn't seem to handle rendering my chat-uploaded images to on page
+- Gemini favored creation of SVG visuals instead
+- Gemini also froze up and crashed every now and then...
+- Gemini's revision history is navigated through a back/forward arrow; wish this was more flexible like Claude's
+
+<img width="100%" alt="image" src="https://github.com/user-attachments/assets/b55d657d-777d-4ded-8ef9-f92a8dad3783" />
+
+## Migrated to Claude > Artifact (basic web chat; not Code nor Cowork)
+
+- Claude with Sonnet 4.5 Extended was just as good at coding, but seemed to not handle SVG creation as well
+- Claude kept claiming that it would be able to render my [chat-/project-]uploaded images on the page, but the image upload kept failing with a reported "network error" despite all other network activity working fine. It also claimed it could use an image I uploaded to the Project the chat was in, but it seemed that was also a false hallucination.
+- Claude's revision history is navigated through a dropdown; good flexibility
+
+<img width="100%" alt="image" src="https://github.com/user-attachments/assets/b453812a-4128-4bef-8848-ab4ab8e4f9a7" />
+
+<img width="100%" alt="image" src="https://github.com/user-attachments/assets/1631541b-5d9c-4d85-a226-03da244f7414" />
+
+
+## Migrated to GitHub > Codespace
+
+- Eventually I resorted to GitHub Codespaces because it was closest to normal development environments (VS Code on the web) so I knew I would've been able to upload and use image assets within a project
+- GitHub Copilot with free tier models (like up to GPT-4.1) wasn't great compared to Gemini and Claude models, but luckily I was mostly done with core functionality by this point and was focusing on integrating my custom images
+- I confirmed that I could easily upload and use custom image assets in the Codespace, and then wrote a small script to serve the web app on a dev server within the Codespace to make sure I could visually test changes
+- Then I moved on to generate the cartoon variations of Tofu the dog
+
+<img width="100%" alt="image" src="https://github.com/user-attachments/assets/bb40f424-1e01-456c-b6c2-11c8f490f657" />
+
+<img width="100%" alt="image" src="https://github.com/user-attachments/assets/7552aaba-5126-4d36-a846-1429f24e8469" />
+
+<img alt="image" src="https://github.com/user-attachments/assets/34206e5a-3229-482c-adb0-b245d3e648a2" />
+
+## Used Gemini Nano Banana to create character variations
+
+<img width="818" height="1367" alt="image" src="https://github.com/user-attachments/assets/9a73c3e7-6622-44ed-9f98-7b1454484aac" />
+
+<img width="792" height="1328" alt="image" src="https://github.com/user-attachments/assets/1d5533da-8be9-4a4a-ba3f-f2f712a5140d" />
+
+<img width="741" height="1092" alt="image" src="https://github.com/user-attachments/assets/5ef82732-665c-4649-8301-32813faa6437" />
+
+## Used Adobe Express integration within Google Gemini to crop and download character variations from the grids Gemini kept wanting to generate
+
+- The Adobe Express integration chiclet doesn't always show (I'm not sure why; maybe there's a partial rollout), but here's more or less what the process looked like (captured the UX from another time I was able to see and use it):
+
+<img width="596" height="497" alt="Screenshot 2026-02-13 183759" src="https://github.com/user-attachments/assets/5d056add-cf47-4c22-95ba-ab001c6d983c" />
+
+<img width="1172" height="974" alt="Screenshot 2026-02-13 183842" src="https://github.com/user-attachments/assets/e2c339f8-b375-45a0-8071-40a0c0349dbe" />
+
+# After uploading and hooking up the custom images, I set up the GH Page hosting and was done!
+
+<img width="949" height="1101" alt="image" src="https://github.com/user-attachments/assets/7151f2c5-96fe-4b0d-97e6-e05676683795" />
+
+<img width="951" height="1099" alt="image" src="https://github.com/user-attachments/assets/e73e72ce-4d46-4658-9e1e-2d2e32dc02a7" />
+
+<img width="825" height="1024" alt="image" src="https://github.com/user-attachments/assets/a0011c99-cc11-4899-8c4b-b973c4460907" />
+
