@@ -2,7 +2,11 @@
 
 This is a digital Valentine's gift to combine learning with love, because how else do we have time for both?! 🥹😂
 
+https://calvwng.github.io/tofu-gacha-garden/
+
 ## Process
+
+See https://github.com/calvwng/tofu-gacha-garden/wiki/Visual-Log for visual history.
 
 1. I started in Google Gemini using its Canvas tool. I was determined to vibe-code this to figure out viable workflows to build personal projects more casually without work-provided restrictions and tooling. Then I can start bringing more ideas to life!
 1. I got decently far in the Gemini Canvas: I built the responsive layout with gacha capsule placeholders for each day's slot in a few prompt shots.
