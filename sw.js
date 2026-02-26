@@ -1,5 +1,5 @@
 const CACHE_NAME = 'tofu-gacha-v1';
-const urlsToCache = [
+const CORE_ASSETS = [
   './',
   './index.html',
   './manifest.json',
@@ -22,7 +22,10 @@ const urlsToCache = [
   './assets/tofus-sunflower.png',
   './assets/tofus-tech.png',
   './assets/tofus-tomago.png',
-  './assets/tofus-valentine.png',
+  './assets/tofus-valentine.png'
+];
+
+const EXTERNAL_ASSETS = [
   'https://cdn.tailwindcss.com',
   'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js',
   'https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&display=swap'
@@ -31,8 +34,15 @@ const urlsToCache = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(urlsToCache);
+      .then(async cache => {
+        try {
+          // Attempt to cache external assets, but don't block installation
+          await cache.addAll(EXTERNAL_ASSETS);
+        } catch (error) {
+          console.log('Failed to cache external assets:', error);
+        }
+        // Cache core assets (critical)
+        return cache.addAll(CORE_ASSETS);
       })
   );
 });
